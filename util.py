@@ -3,84 +3,83 @@ import streamlit as st
 import tempfile
 import os
 
-os.environ['ASTRA_DB_APPLICATION_TOKEN'] = st.secrets['ASTRA_DB_APPLICATION_TOKEN']
-os.environ['ASTRA_DB_API_ENDPOINT'] = st.secrets['ASTRA_DB_API_ENDPOINT']
-
 
 def configure_llm_model():
     # Configuration for AI Company selection
     ai_company = select_ai_company()
     model = ''
+    app_activation = False
     if ai_company == 'OpenAI':
-        openai_api_key, app_activation = openai_api_key_configuration(key='llm')
+        openai_api_key, app_activation = openai_api_key_configuration()
         model = openai_model_selection()
-        os.environ['OPENAI_API_KEY'] = openai_api_key  # Set the environment variable for api key
+        st.session_state.openai_api_key = openai_api_key
+
     elif ai_company == 'Google':
         google_api_key, app_activation = google_api_key_configuration()
         model = google_model_selection()
-        os.environ['OPENAI_API_KEY'] = google_api_key  # Set the environment variable for api key
+        st.session_state.google_api_key = google_api_key
 
     elif ai_company == 'Groq':
         groq_api_key, app_activation = groq_api_key_configuration()
         model = groq_model_selection()
-        os.environ['OPENAI_API_KEY'] = groq_api_key  # Set the environment variable for api key
+        st.session_state.groq_api_key = groq_api_key
 
     return ai_company, model, app_activation
 
 
 def configure_embedding_model():
     embedding_model = embedding_configuration()
-
+    app_activation = False
     if embedding_model == 'OpenAI':
-        openai_api_key, app_activation = openai_api_key_configuration(key='embedding')
-        os.environ['OPENAI_API_KEY'] = openai_api_key  # Set the environment variable for api key
+        openai_embedding_api_key, app_activation = openai_embedding_api_key_configuration()
+        st.session_state.openai_embedding_api_key = openai_embedding_api_key
     elif embedding_model == 'HuggingFace':
-        hf_api_key, app_activation = hf_api_key_configuration()
-        os.environ['HUGGING_FACE_API_KEY'] = hf_api_key  # Set the environment variable for api key
-        os.environ['HF_API_URL'] = "https://api-inference.huggingface.co/models/BAAI/bge-large-en-v1.5"
+        hf_embedding_api_key, app_activation = hf_embedding_api_key_configuration()
+        st.session_state.hf_embedding_api_key = hf_embedding_api_key
+
     return embedding_model, app_activation
 
 
 # Function to configure options to select AI company
 def select_ai_company():
     st.subheader("Select Company 🏢")
-    ai_company = st.selectbox('Select the AI Company', ('OpenAI', 'Google', 'Groq'),
+    ai_company = st.selectbox('Select the AI Company', ('', 'OpenAI', 'Google', 'Groq'),
                               label_visibility="collapsed")
     return ai_company
 
 
 # Function for OpenAI API configuration
-def openai_api_key_configuration(key):
+def openai_api_key_configuration():
     st.subheader("API Key🔑")
-    api_key = st.text_input("Enter your OpenAI API Key:", type="password", key=key,
+    openai_api_key = st.text_input("Enter your OpenAI API Key:", type="password",
                             help='Get API Key from: https://platform.openai.com/api-keys')
-    if api_key == '':
+    if openai_api_key == '':
         st.warning('Enter OpenAI API Key ️')
         app_activation = False
-    elif api_key.startswith('sk-') and ((len(api_key) == 51) or (len(api_key) == 56)):
+    elif openai_api_key.startswith('sk-') and (len(openai_api_key) == 56):
         st.success('Lets Proceed!', icon='️👉')
         app_activation = True
     else:
         st.warning('Please enter the correct API Key 🗝️!', icon='⚠️')
         app_activation = False
-    return api_key, app_activation
+    return openai_api_key, app_activation
 
 
 # Function for Google API configuration
 def google_api_key_configuration():
     st.subheader("API Key🔑")
-    api_key = st.text_input("Enter your Google API Key:", type="password",
+    google_api_key = st.text_input("Enter your Google API Key:", type="password",
                             help='Get API Key from: https://platform.openai.com/api-keys')
-    if api_key == '':
+    if google_api_key == '':
         st.warning('Enter Google API Key ️')
         app_activation = False
-    elif api_key.startswith('AI') and (len(api_key) == 39):
+    elif google_api_key.startswith('AI') and (len(google_api_key) == 39):
         st.success('Lets Proceed!', icon='️👉')
         app_activation = True
     else:
         st.warning('Please enter the correct API Key 🗝️!', icon='⚠️')
         app_activation = False
-    return api_key, app_activation
+    return google_api_key, app_activation
 
 
 # Function for Groq API configuration
@@ -100,8 +99,8 @@ def groq_api_key_configuration():
     return groq_api_key, app_activation
 
 
-# Function for HF API configuration
-def hf_api_key_configuration():
+# Function for HF API key configuration
+def hf_embedding_api_key_configuration():
     st.subheader("API Key🔑")
     hf_api_key = st.text_input("Enter your HF API Key:", type="password",
                                help='Get Groq API Key from: https://console.groq.com/keys')
@@ -115,6 +114,23 @@ def hf_api_key_configuration():
         st.warning('Please enter the correct API Key 🗝️!', icon='⚠️')
         app_activation = False
     return hf_api_key, app_activation
+
+
+# Function for OpenAI Embedding API key configuration
+def openai_embedding_api_key_configuration():
+    st.subheader("API Key🔑")
+    openai_api_key = st.text_input("Enter your OpenAI Embedding API Key:", type="password",
+                            help='Get API Key from: https://platform.openai.com/api-keys')
+    if openai_api_key == '':
+        st.warning('Enter OpenAI API Key ️')
+        app_activation = False
+    elif openai_api_key.startswith('sk-') and ((len(openai_api_key) == 51) or (len(openai_api_key) == 56)):
+        st.success('Lets Proceed!', icon='️👉')
+        app_activation = True
+    else:
+        st.warning('Please enter the correct API Key 🗝️!', icon='⚠️')
+        app_activation = False
+    return openai_api_key, app_activation
 
 
 # Function to configure options to select available Google models
@@ -146,7 +162,7 @@ def groq_model_selection():
 
 def embedding_configuration():
     st.subheader("Embedding Model Selection")
-    embedding_model = st.selectbox('Select the Embedding Model', ('OpenAI', 'HuggingFace'),
+    embedding_model = st.selectbox('Select the Embedding Model', ('', 'OpenAI', 'HuggingFace'),
                                    label_visibility="collapsed")
     return embedding_model
 
@@ -174,12 +190,12 @@ def create_vector_db(uploaded_file, embedding_model):
 
 def create_vector_db_openai(collection_name, file_path):
     TWEAKS = {
-        "AstraDB-2WGg8": {"api_endpoint": 'ASTRA_DB_API_ENDPOINT',
+        "AstraDB-gEyqU": {"api_endpoint": 'ASTRA_DB_API_ENDPOINT',
                           "token": "ASTRA_DB_APPLICATION_TOKEN",
-                          "collection_name": collection_name},  # Make the Collection name same as file name
-        "OpenAIEmbeddings-SsyZ0": {"openai_api_key": 'OPENAI_API_KEY'},
-        "File-68wml": {"path": file_path},
-        "SplitText-vHnqd": {}
+                          "collection_name": collection_name},
+        "File-nVOlf": {"path": file_path},
+        "SplitText-uaSmV": {},
+        "OpenAIEmbeddings-tDtW8": {"openai_api_key": "OPENAI_EMBEDDING_API_KEY"}
     }
 
     with st.spinner('Creating Vector DB ...'):
@@ -227,17 +243,18 @@ def get_llm_response(collection_name, question, ai_company, model, embedding_mod
 
 def llm_openai_embedding_openai(collection_name, question, model):
     TWEAKS = {
-        "ChatInput-vOCBK": {},
-        "ParseData-kNNGD": {},
-        "Prompt-gMVIv": {},
-        "ChatOutput-v6RpM": {},
-        "OpenAIEmbeddings-oajZX": {"openai_api_key": 'OPENAI_API_KEY'},
-        "OpenAIModel-MEJ5P": {"openai_api_key": 'OPENAI_API_KEY',
+        "ChatInput-vMnxM": {},
+        "ParseData-8oSv3": {},
+        "Prompt-fr6Sg": {},
+        "ChatOutput-mIOFr": {},
+        "OpenAIModel-sfHtD": {"openai_api_key": 'OPENAI_API_KEY',
                               "model_name": model},
-        "AstraDB-uM9oj": {"api_endpoint": 'ASTRA_DB_API_ENDPOINT',
+        "AstraDB-prrD7": {"api_endpoint": 'ASTRA_DB_API_ENDPOINT',
                           "token": "ASTRA_DB_APPLICATION_TOKEN",
-                          "collection_name": collection_name}
+                          "collection_name": collection_name},
+        "OpenAIEmbeddings-qdIm0": {"openai_api_key": 'OPENAI_EMBEDDING_API_KEY'}
     }
+
     output = run_flow_from_json(flow="chat_with_pdf_openai_embeddings_openai.json",
                                 input_value=question,
                                 fallback_to_env_vars=True,  # False by default
@@ -277,7 +294,7 @@ def llm_gemini_embedding_openai(collection_name, question, model):
                           "token": "ASTRA_DB_APPLICATION_TOKEN",
                           "collection_name": collection_name},
         "GoogleGenerativeAIModel-OVdPm": {"google_api_key": 'GOOGLE_API_KEY', "model_name": model},
-        "OpenAIEmbeddings-UwJRs": {"openai_api_key": 'OPENAI_API_KEY'}
+        "OpenAIEmbeddings-UwJRs": {"openai_api_key": 'OPENAI_EMBEDDING_API_KEY'}
     }
     output = run_flow_from_json(flow="chat_with_pdf_gemini_embedding_openai.json",
                                 input_value=question,
@@ -316,7 +333,7 @@ def llm_groq_embeddings_openai(collection_name, question, model):
         "AstraDB-NSfP9": {"api_endpoint": 'ASTRA_DB_API_ENDPOINT',
                           "token": "ASTRA_DB_APPLICATION_TOKEN",
                           "collection_name": collection_name},
-        "OpenAIEmbeddings-X9Uyn": {"openai_api_key": 'OPENAI_API_KEY'},
+        "OpenAIEmbeddings-X9Uyn": {"openai_api_key": 'OPENAI_EMBEDDING_API_KEY'},
         "GroqModel-PqJIq": {"groq_api_key": "GROQ_API_KEY", "model_name": model}
     }
     output = run_flow_from_json(flow="chat_with_pdf_groq_embedding_openai.json",

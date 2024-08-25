@@ -3,20 +3,20 @@ import streamlit as st
 
 # --- PAGE SETUP ---
 main_page = st.Page(
-    "pages/chat_pdf.py",
+    "views/chat_pdf.py",
     title="Chat with PDF",
     icon=":material/upload_file:",
     default=True,
 )
 
 admin_page = st.Page(
-    "pages/admin.py",
+    "views/admin.py",
     title="Configuration",
     icon=":material/admin_panel_settings:",
 )
 
 about_page = st.Page(
-    "pages/about.py",
+    "views/about.py",
     title="About",
     icon=":material/info:",
 )
